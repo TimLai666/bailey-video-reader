@@ -18,3 +18,8 @@ __pycache__/
 .env
 .env.*
 !.env.example
+# Original-audio retention containers (generated media never belongs in Git).
+*.m4a
+*.flac
+*.webm
+*.mov

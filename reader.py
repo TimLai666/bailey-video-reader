@@ -160,13 +160,155 @@ def extract_frames(src, out, start, end, width, interval, scene, max_frames):
     return frames
 
 
-def preserve_original_audio(src, out, stream_index):
-    """Remux the full selected compressed stream without ASR or resampling."""
-    original = out / "audio_original.mka"
-    run(["ffmpeg", "-y", "-i", str(src), "-map", f"0:{stream_index}", "-vn", "-sn", "-c:a", "copy",
-         str(original), "-hide_banner", "-loglevel", "error"])
-    return {"file": original.name, "sha256": sha256(original), "scope": "full source stream"}
+def audio_preservation_signature(path, stream_index, deadline):
+    """Verify compressed bytes and decoded samples/timestamps without ASR imports.
 
+    Stream bounded metadata, not PCM, through the existing strict media runner.
+    Exact native decoded sample format avoids a lossy checksum conversion.
+    """
+    from fractions import Fraction
+    from capture_queue.webm_duration import _run_strict, MAX_PACKETS, MAX_PACKET_BYTES
+
+    # FFprobe warns about a QuickTime timecode data track even when selecting
+    # audio only. Permit only this exact, metadata-confirmed unselected case.
+    initial = json.loads(_run_strict(["/usr/bin/ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe",
+                                      "-show_streams", "-of", "json", str(path)], deadline))
+    allowed = tuple(f"Unsupported codec with id 0 for input stream {s['index']}".encode()
+                    for s in initial.get("streams", []) if s["index"] != stream_index
+                    and s.get("codec_type") == "data" and s.get("codec_tag_string") == "tmcd"
+                    and not s.get("codec_name"))
+
+    def strict(command, **kwargs):
+        try:
+            return _run_strict(command, deadline,
+                               allowed_stderr_lines=allowed if command[0].endswith("ffprobe") else (), **kwargs)
+        except (ValueError, TimeoutError) as error:
+            raise RuntimeError(f"Original audio preservation verification failed: {error}") from error
+
+    metadata = json.loads(strict(["/usr/bin/ffprobe", "-v", "warning", "-protocol_whitelist", "file,pipe",
+                                  "-select_streams", str(stream_index), "-show_streams", "-show_format", "-show_data_hash", "sha256", "-of", "json", str(path)]))
+    stream = next((s for s in metadata.get("streams", []) if s["index"] == stream_index), None)
+    if not stream or stream.get("codec_type") != "audio":
+        raise RuntimeError("Original audio preservation: selected stream is not audio")
+    sample_format = stream.get("sample_fmt", "").removesuffix("p")
+    pcm_codec = {"u8": "pcm_u8", "s16": "pcm_s16le", "s32": "pcm_s32le", "s64": "pcm_s64le",
+                 "flt": "pcm_f32le", "dbl": "pcm_f64le"}.get(sample_format)
+    if not pcm_codec:
+        raise RuntimeError("Original audio preservation: unsupported native decoded sample format")
+    time_base, sample_rate = Fraction(stream["time_base"]), int(stream["sample_rate"])
+    if time_base <= 0 or sample_rate <= 0:
+        raise RuntimeError("Original audio preservation: invalid audio clock")
+    packet_digest, timeline_digest = hashlib.sha256(), hashlib.sha256()
+    packets, samples, frames, max_frame_samples = 0, 0, 0, 0
+    first_pts = last_end = None
+    packet_edges = {}
+
+    def fields(line):
+        return dict(part.split("=", 1) for part in line.decode("utf-8").split("|") if "=" in part)
+
+    def packet(line):
+        nonlocal packets
+        row = fields(line)
+        if not re.fullmatch(r"SHA256:[0-9a-f]{64}", row.get("data_hash", "")):
+            raise RuntimeError("Original audio preservation: missing packet payload hash")
+        packets += 1
+        if packets > MAX_PACKETS:
+            raise RuntimeError("Original audio preservation: packet limit exceeded")
+        packet_digest.update(f"{row['size']}:{row['data_hash']}\n".encode())
+        edge = {key: value for key, value in row.items() if key not in ("size", "data_hash")}
+        packet_edges.setdefault("first", edge)
+        packet_edges["last"] = edge
+
+    strict(["/usr/bin/ffprobe", "-v", "warning", "-protocol_whitelist", "file,pipe",
+            "-select_streams", str(stream_index), "-show_packets", "-show_data_hash", "sha256",
+            "-show_entries", "packet=pts,dts,duration,size,data_hash", "-of", "compact=p=0:nk=0", str(path)],
+           max_stdout=MAX_PACKET_BYTES, on_line=packet)
+
+    def frame(line):
+        nonlocal samples, frames, first_pts, last_end, max_frame_samples
+        row = fields(line)
+        try:
+            pts, count = int(row["pts"]) * time_base, int(row["nb_samples"])
+        except (KeyError, ValueError) as error:
+            raise RuntimeError("Original audio preservation: missing decoded sample timing") from error
+        frames += 1
+        if frames > MAX_PACKETS or count <= 0:
+            raise RuntimeError("Original audio preservation: invalid decoded frame count")
+        if first_pts is None:
+            first_pts = pts
+        samples += count
+        max_frame_samples = max(max_frame_samples, count)
+        last_end = pts + Fraction(count, sample_rate)
+        # Exact rational source-clock PTS, not rounded decimal display times.
+        timeline_digest.update(f"{pts}:{count}:{row.get('sample_fmt')}:{row.get('channels')}\n".encode())
+
+    strict(["/usr/bin/ffprobe", "-v", "warning", "-protocol_whitelist", "file,pipe",
+            "-select_streams", str(stream_index), "-show_frames", "-show_entries",
+            "frame=pts,nb_samples,sample_fmt,channels", "-of", "compact=p=0:nk=0", str(path)],
+           max_stdout=MAX_PACKET_BYTES, on_line=frame)
+    pcm = strict(["/usr/bin/ffmpeg", "-nostdin", "-v", "warning", "-protocol_whitelist", "file,pipe",
+                  "-guess_layout_max", "0", "-i", str(path), "-map", f"0:{stream_index}", "-vn", "-sn", "-dn", "-c:a", pcm_codec,
+                  "-f", "hash", "-hash", "sha256", "pipe:1"], max_stdout=1024).decode().strip()
+    if not packets or not samples or not re.fullmatch(r"SHA256=[0-9a-f]{64}", pcm):
+        raise RuntimeError("Original audio preservation: no verifiable decoded audio")
+    return {"codec_name": stream["codec_name"], "profile": stream.get("profile"),
+            "sample_rate": sample_rate, "channels": stream["channels"],
+            "channel_layout": stream.get("channel_layout"), "native_pcm_codec": pcm_codec,
+            "extradata_sha256": stream.get("extradata_hash"),
+            "packet_count": packets, "packet_payload_sha256": packet_digest.hexdigest(),
+            "decoded_sample_frames": samples, "decoded_frame_count": frames,
+            "max_decoded_frame_samples": max_frame_samples,
+            "classified_non_audio_warnings": [line.decode() for line in allowed],
+            "decoded_pcm_sha256": pcm.split("=", 1)[1],
+            "decoded_timeline_sha256": timeline_digest.hexdigest(),
+            "first_decoded_pts_seconds_exact": str(first_pts),
+            "last_decoded_end_seconds_exact": str(last_end),
+            "container_start_time_seconds": metadata.get("format", {}).get("start_time"),
+            "stream_time_base": stream["time_base"], "packet_edges": packet_edges}
+
+
+def preserve_original_audio(src, out, stream_index):
+    """Remux only when compressed bytes AND decoded samples/timing are verified."""
+    from capture_queue.webm_duration import _run_strict, _interruptible, _hash
+    deadline = time.monotonic() + 900
+    source_hash = _hash(src, deadline, src.stat().st_size)
+    original = None
+    with _interruptible():
+        try:
+            before = audio_preservation_signature(src, stream_index, deadline)
+            codec = before["codec_name"]
+            # Matroska loses MP4 AAC priming and MP3 skip/discard semantics.
+            # Native containers retain these; PCM WAV avoids millisecond rounding.
+            suffix = {"aac": ".m4a", "alac": ".m4a", "mp3": ".mp3", "flac": ".flac"}.get(codec, ".mka")
+            if codec.startswith("pcm_"):
+                suffix = ".wav"
+            original = out / ("audio_original" + suffix)
+            _run_strict(["/usr/bin/ffmpeg", "-nostdin", "-v", "warning", "-protocol_whitelist", "file,pipe",
+                         "-y", "-copyts", "-guess_layout_max", "0", "-i", str(src), "-map", f"0:{stream_index}", "-vn", "-sn", "-dn",
+                         "-c:a", "copy", "-avoid_negative_ts", "disabled",
+                         *(["-frame_size", str(before["max_decoded_frame_samples"])] if codec == "alac" else []),
+                         *(["-f", "mp4"] if suffix == ".m4a" else []), str(original)], deadline)
+            after = audio_preservation_signature(original, 0, deadline)
+            excluded = {"container_start_time_seconds", "stream_time_base", "packet_edges", "classified_non_audio_warnings"}
+            changed = [key for key in before if key not in excluded and before[key] != after[key]]
+            if changed:
+                raise RuntimeError("Original audio preservation changed " + ", ".join(changed))
+            if _hash(src, deadline, src.stat().st_size) != source_hash:
+                raise RuntimeError("Source changed during original audio preservation")
+            return {"file": original.name, "sha256": _hash(original, deadline, original.stat().st_size), "scope": "full source stream",
+                    "method": "verified_stream_copy", "retained_stream_index": 0,
+                    "verification": {"status": "verified", "source_sha256": source_hash,
+                                     "source": before, "retained": after,
+                                     "packet_payloads_equal": True, "native_decoded_pcm_equal": True,
+                                     "decoded_sample_timeline_equal": True,
+                                     "timing_policy": "Exact decoded source-clock PTS and sample counts; container/packet duration metadata may differ",
+                                     "playback_origin_note": "Decoded PTS are preserved. Standalone players may rebase to the retained container start_time; use source-clock PTS for alignment",
+                                     "limits": {"timeout_seconds": 900, "packets_or_decoded_frames": 250000,
+                                                "metadata_bytes_per_scan": 64 * 1024**2}}}
+        except BaseException:
+            if original is not None:
+                original.unlink(missing_ok=True)
+            raise
 
 def skip_audio_asr(src, out, stream_index, start, end):
     result = {"timebase": TIMEBASE, "origin": "not_transcribed",
@@ -196,8 +338,8 @@ def transcribe_audio(src, out, stream_index, model_path, language, start, end, t
          "-hide_banner", "-loglevel", "error"])
     result["working_audio"] = {"file": wav.name, "sha256": sha256(wav),
                                "conversion": "decoded PCM, 16 kHz mono; not the original multichannel waveform"}
-    # Keep a remuxed copy of the selected original compressed stream for targeted
-    # listening. It is the full source stream, with its original codec/channels.
+    # Keep a verified remux for targeted listening. The ASR working WAV above
+    # always decodes directly from the source, never from a container conversion.
     result["original_audio"] = preserve_original_audio(src, out, stream_index)
     import onnxruntime
     onnxruntime.disable_telemetry_events()

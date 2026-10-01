@@ -95,7 +95,17 @@ def test_local_asr_adapter_real_interface_mock_output(tmp_path,monkeypatch):
     def fake(src,out,stream,model,language,start,end,threads):
         calls.append(src);return {'segments':[{'id':'asr_0','start':0.1,'end':0.3,'text':'spoken evidence','words':[]}]}
     monkeypatch.setattr(reader,'transcribe_audio',fake)
-    m,out=run_import(tmp_path,j,skip_browser_asr=False)
+    # This adapter test replaces inference. Supply only its local-path marker;
+    # do not rely on a downloaded model in the checkout.
+    model=tmp_path/'mock-model';model.mkdir();(model/'model.bin').write_bytes(b'mocked backend marker')
+    real_read_text=Path.read_text
+    pinned=reader.ROOT/'model-source.json'
+    mock_pin={'provenance':'unit-test backend mock; no inference',
+              'files':{'model.bin':reader.sha256(model/'model.bin')}}
+    def read_test_pin(path,*args,**kwargs):
+        return json.dumps(mock_pin) if path==pinned else real_read_text(path,*args,**kwargs)
+    monkeypatch.setattr(Path,'read_text',read_test_pin)
+    m,out=run_import(tmp_path,j,skip_browser_asr=False,model=str(model))
     a=json.loads((out/'asr.json').read_text());assert len(calls)==1 and calls[0].name=='captured.wav'
     assert a['status']=='ok' and a['segments'][0]['text']=='spoken evidence' and a['segments'][0]['start']==.1
 

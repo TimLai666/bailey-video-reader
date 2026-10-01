@@ -68,8 +68,10 @@ def test_skip_keeps_frames_audio_and_exact_sidecar(media, tmp_path, forbid_asr):
     assert c["tracks"][0]["origin"] == "supplied_sidecar"
     assert (out / c["tracks"][0]["raw_file"]).read_bytes() == raw
     assert c["tracks"][0]["source_sha256"] == reader.sha256(sidecar)
-    assert (out / "audio_original.mka").stat().st_size > 0
-    original_streams = reader.probe(out / "audio_original.mka")["streams"]
+    assert a["original_audio"]["file"] == "audio_original.m4a"
+    assert (out / a["original_audio"]["file"]).stat().st_size > 0
+    assert a["original_audio"]["verification"]["native_decoded_pcm_equal"]
+    original_streams = reader.probe(out / a["original_audio"]["file"])["streams"]
     assert original_streams[0]["codec_name"] == "aac"
     assert a["original_audio"]["scope"] == "full source stream"
     assert not (out / "audio_asr_16khz_mono.wav").exists()
@@ -104,7 +106,7 @@ def test_skip_audio_only_keeps_no_frames(media, tmp_path, forbid_asr):
     m = reader.process(arguments(audio, out))
     assert m["input_modality"] == "audio_only"
     assert json.loads((out / "frames.json").read_text())["frames"] == []
-    assert (out / "audio_original.mka").is_file()
+    assert (out / json.loads((out / "asr.json").read_text())["original_audio"]["file"]).is_file()
 
 
 def test_default_and_legacy_force_still_select_asr():

@@ -81,7 +81,8 @@ def _hash(path, deadline, limit):
     return digest.hexdigest()
 
 
-def _run_strict(command, deadline, *, max_stdout=2 * 1024**2, on_line=None, output_file=None, output_limit=None):
+def _run_strict(command, deadline, *, max_stdout=2 * 1024**2, on_line=None, output_file=None, output_limit=None,
+                allowed_stderr_lines=()):
     """Stream bounded output and reject warnings, including exit-0 truncation."""
     _remaining(deadline)
     with tempfile.TemporaryFile() as errors:
@@ -117,7 +118,11 @@ def _run_strict(command, deadline, *, max_stdout=2 * 1024**2, on_line=None, outp
             process.wait(timeout=_remaining(deadline))
             require(process.returncode == 0, "WebM verification tool failed; duration remains unverified")
             # FFmpeg can exit 0 while reporting 'File ended prematurely'.
-            require(os.fstat(errors.fileno()).st_size == 0, "WebM verification reported warnings/errors; duration remains unverified")
+            errors.seek(0)
+            diagnostics = errors.read(MAX_STDERR_BYTES + 1)
+            require(len(diagnostics) <= MAX_STDERR_BYTES, "WebM diagnostics exceeded the byte limit")
+            require(all(line in allowed_stderr_lines for line in diagnostics.splitlines()),
+                    "Media verification reported warnings/errors: " + diagnostics[-2000:].decode("utf-8", errors="replace"))
             if output_file is not None:
                 require(output_file.is_file() and 0 < output_file.stat().st_size <= output_limit,
                         "Temporary WebM is empty or exceeded the disk budget")

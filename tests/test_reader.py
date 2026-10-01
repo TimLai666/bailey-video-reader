@@ -126,7 +126,7 @@ def test_real_audio_only(name):
     assert m['status']=='complete' and m['input_modality']=='audio_only'
     assert a['status']=='ok' and len(a['segments'])>0
     assert f['frames']==[]
-    assert (out/'audio_original.mka').stat().st_size>0
+    assert (out/a['original_audio']['file']).stat().st_size>0
 
 
 @pytest.mark.parametrize('name',['mandarin_audio','mandarin_fused'])

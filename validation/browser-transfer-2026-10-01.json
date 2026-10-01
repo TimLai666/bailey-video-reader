@@ -295,5 +295,175 @@
       "code_changes": false,
       "prior_validation_fields_unchanged": true
     }
+  },
+  "downloaded_clip_checks_20261001": {
+    "observed_on_utc": "2026-10-01",
+    "reviewed_at_utc": "2026-10-01T16:33:11.774659+00:00",
+    "scope": "Two downloaded short economics/financial-education clips; external ASR plus sampled-image review and local reader retention checks",
+    "historical_runtime_commit": "4720f6337bdcee7958e63b399db35298b1e2899a",
+    "base_public_commit": "979f651451431d644622b26c48f6e6e20232b2f9",
+    "corrected_runtime_sha256": {
+      "reader.py": "05cea45e9013ec28b6a4fb8425378fb69a5ce5de1a844ada1042b6c9496552fd",
+      "capture_queue/webm_duration.py": "c298a0adc123812c72d4ca64400bd18787415b08afd1d94355812839b5523fb6"
+    },
+    "local_asr_performed": false,
+    "external_service": {
+      "provider": "Super Captions",
+      "interaction": "Manual browser operation; visible editor fields reconstructed as SRT",
+      "ai_enhancement": false,
+      "backend_model_version": "unknown",
+      "downloaded_service_srt": false,
+      "direct_cli_service_connector": false,
+      "service_rerun_during_publication_review": false
+    },
+    "cases": [
+      {
+        "case_id": "dallas",
+        "source_page": "https://fraser.stlouisfed.org/title/6146/item/594002/content/mp4/kaplan_laborforce20170405",
+        "title": "What Does Labor Force Participation Tell Us About the Skills Gap?",
+        "external_asr_language_selected": "English",
+        "source_bytes": 125619867,
+        "source_duration_seconds": 82.048633,
+        "source_sha256": "70643bb886ac715d4fa037a6d45d57ef999a100af59755ec2ffc66139584e74f",
+        "upload_preview_sha256": "02b153dcbcb7b17bd801d44b909ad5f1c8145027c4f7788223872962d9e5011a",
+        "reconstructed_sidecar_sha256": "b50b80a0279693c418e68701077608c852eb4b8f32c36c20914a049a9f28cc9f",
+        "sampled_frames_inspected": 83,
+        "external_asr_cues": 39,
+        "source_preview_audio_packets": 3847,
+        "source_preview_packet_payloads_equal": true,
+        "source_preview_pcm_equal": true,
+        "original_source_unchanged": true,
+        "corrected_cli": {
+          "status": "complete_without_asr",
+          "runtime_seconds": 8.894,
+          "parameters": {
+            "skip_asr": true,
+            "interval_seconds": 1,
+            "max_frames": 180
+          },
+          "retained_file": "audio_original.m4a",
+          "native_pcm_codec": "pcm_f32le",
+          "source_and_retained_pcm_sha256": "076b157ae87f70964d58975dcb7fd52bce7dbb2165fd833a25e315a8c29985ba",
+          "decoded_sample_frames": 3939328,
+          "source_and_retained_decoded_timeline_sha256": "519288fc56f2105431eebdd3ed640add5f21e0078b97d1fd5ffc197fa7e56059",
+          "compressed_payloads_equal": true,
+          "native_decoded_pcm_equal": true,
+          "exact_decoded_sample_timeline_equal": true,
+          "source_frame_samples_unchanged": true,
+          "captions_and_alignment_unchanged": true,
+          "all_output_artifact_hashes_checked": true,
+          "caption_origin": "supplied_sidecar"
+        },
+        "source_publication_date": "2017-04-05",
+        "source_publisher": "Federal Reserve Bank of Dallas, archived by St. Louis Fed FRASER",
+        "rights_terms": "https://fraser.stlouisfed.org/terms-of-use",
+        "source_preview_packet_timing_equal": true,
+        "cue_window_seconds": [
+          0.485,
+          59.702
+        ],
+        "cues_with_inside_interval_frame": 38,
+        "cues_with_only_labelled_adjacent_frame": 1,
+        "official_transcript_limit": "Heading differs from on-screen question and body is not a verified verbatim reference",
+        "historical_cli_runtime_seconds": 5.533,
+        "historical_cli_max_frames": 180,
+        "source_preview_pcm_codec": "pcm_f32le",
+        "source_preview_native_pcm_sha256": "076b157ae87f70964d58975dcb7fd52bce7dbb2165fd833a25e315a8c29985ba",
+        "source_preview_pcm_check_scope": "Publication review independently decoded both inputs to native48kHz stereo float32; TWSE earlier receipt used16-bit PCM at the same rate/channels"
+      },
+      {
+        "case_id": "twse",
+        "source_page": "https://www.emega.com.tw/emegaTran/bulletin.do?id=20260106092157995714",
+        "title": "主動式ETF與被動式平衡型ETF介紹",
+        "external_asr_language_selected": "Traditional Chinese",
+        "source_bytes": 58833985,
+        "source_duration_seconds": 33.109333,
+        "source_sha256": "e9862f8fd37139df5f39a3538a944a67ee12f13363b7e84e1f096241d2883e6e",
+        "upload_preview_sha256": "654786aceb6c84a40f4ecd5209d07d9541df8a4d394e5b661af2da300d813139",
+        "reconstructed_sidecar_sha256": "e22f501a9473e9ea5b7c6540b21046f74f75eb25cf7bc3562b12e95f8b3bec57",
+        "sampled_frames_inspected": 39,
+        "external_asr_cues": 3,
+        "source_preview_audio_packets": 1552,
+        "source_preview_packet_payloads_equal": true,
+        "source_preview_pcm_equal": true,
+        "original_source_unchanged": true,
+        "corrected_cli": {
+          "status": "complete_without_asr",
+          "runtime_seconds": 5.575,
+          "parameters": {
+            "skip_asr": true,
+            "interval_seconds": 1,
+            "max_frames": 180
+          },
+          "retained_file": "audio_original.m4a",
+          "native_pcm_codec": "pcm_f32le",
+          "source_and_retained_pcm_sha256": "2505880d8c643a6a42512dc6c3084ec8aee63944fdc532397e296fdc6341b568",
+          "decoded_sample_frames": 1587136,
+          "source_and_retained_decoded_timeline_sha256": "acad0e9171bf4fa85a2707963782cee584e4a8ce67e54ee11b177cef8d1686cd",
+          "compressed_payloads_equal": true,
+          "native_decoded_pcm_equal": true,
+          "exact_decoded_sample_timeline_equal": true,
+          "source_frame_samples_unchanged": true,
+          "captions_and_alignment_unchanged": true,
+          "all_output_artifact_hashes_checked": true,
+          "caption_origin": "supplied_sidecar"
+        },
+        "source_publisher": "Taiwan Stock Exchange and related institutions; official securities-education distribution page",
+        "catalogue_year": 2026,
+        "open_redistribution_licence_verified": false,
+        "source_preview_packet_pts_dts_equal": true,
+        "source_preview_final_packet_duration_difference_samples": 32,
+        "source_preview_final_packet_duration_difference_seconds": 0.0006666666666666666,
+        "cue_window_seconds": [
+          6.273,
+          30.041
+        ],
+        "cue_timing_limit": "Three long estimated cues split phrases; structural validation is not word alignment",
+        "wording_mismatch_observed": true,
+        "historical_cli_runtime_seconds": 3.116,
+        "historical_cli_max_frames": 1200,
+        "retention_bug_before_fix": {
+          "container": "Matroska",
+          "compressed_payloads_equal": true,
+          "decoded_pcm_equal": false,
+          "source_skip_samples": 2112,
+          "retained_extra_leading_sample_frames": 2112,
+          "extra_leading_seconds": 0.044,
+          "reason": "Original AAC skip metadata was lost when copied to Matroska; source and uploaded preview were unaffected"
+        },
+        "source_preview_pcm_codec": "pcm_f32le",
+        "source_preview_native_pcm_sha256": "2505880d8c643a6a42512dc6c3084ec8aee63944fdc532397e296fdc6341b568",
+        "source_preview_pcm_check_scope": "Publication review independently decoded both inputs to native48kHz stereo float32; TWSE earlier receipt used16-bit PCM at the same rate/channels"
+      }
+    ],
+    "independent_regression_cases": {
+      "total": 10,
+      "real_clips": 2,
+      "generated_or_selected_stream_cases": 8,
+      "case_names": [
+        "aac_44100_mono",
+        "aac_48000_stereo",
+        "wav_24000_mono",
+        "opus_48000_stereo",
+        "twse",
+        "dallas",
+        "mp3",
+        "alac",
+        "flac",
+        "multi_stream_delayed"
+      ],
+      "all_passed": true,
+      "word_error_rate_computed": false
+    },
+    "limits": [
+      "Sampled frames are not continuous visual coverage",
+      "Speech findings use external ASR and limited corroborating text, not direct assistant listening",
+      "Model/version unknown; neither ASR nor burned-in/official text is automatically ground truth",
+      "The existing subtitle parser rounds times to 0.01 seconds while retaining raw SRT bytes",
+      "Untranscribed intervals are not evidence of silence",
+      "YouTube acquisition, long programmes, full Taiwan finance episodes and general ASR accuracy remain unvalidated",
+      "No media, frames, full captions, private URLs, credentials or session identifiers accompany this publication",
+      "Source publishers do not endorse Bailey"
+    ]
   }
 }
