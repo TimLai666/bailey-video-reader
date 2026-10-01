@@ -3,6 +3,10 @@
 from __future__ import annotations
 import argparse,contextlib,fcntl,hashlib,json,math,os,re,signal,stat,subprocess,sys,tempfile,time,uuid
 from pathlib import Path
+if __package__:
+    from .webm_duration import resolve_duration
+else:
+    from webm_duration import resolve_duration
 
 SCHEMA='bailey-capture-queue/1'
 EXTENSIONS={'.mp4','.webm','.mkv','.mov','.m4v','.avi'}
@@ -88,11 +92,13 @@ def register(path,session_id,source_id,job_id=None):
     return j
 
 def media_probe(path):
-    r=subprocess.run(['/usr/bin/ffprobe','-v','error','-protocol_whitelist','file,pipe','-show_entries','format=duration:stream=index,codec_type,codec_name','-of','json',str(path)],capture_output=True,text=True,timeout=30)
+    r=subprocess.run(['/usr/bin/ffprobe','-v','error','-protocol_whitelist','file,pipe','-show_entries','format=duration,format_name:stream=index,codec_type,codec_name','-of','json',str(path)],capture_output=True,text=True,timeout=30)
     require(r.returncode==0,'Local file is not a readable supported media container')
-    m=json.loads(r.stdout);duration=float(m.get('format',{}).get('duration',0));require(0<duration<=7200,'Media duration missing or over two hours')
+    m=json.loads(r.stdout);duration,verification=resolve_duration(path,m);require(0<duration<=7200,'Media duration missing or over two hours')
     streams=m.get('streams',[]);require(any(s.get('codec_type')=='video' for s in streams),'Queue accepts already-landed video files only')
-    return {'duration_seconds':duration,'streams':streams,'audio_status':'present' if any(s.get('codec_type')=='audio' for s in streams) else 'missing_audio'}
+    result={'duration_seconds':duration,'streams':streams,'audio_status':'present' if any(s.get('codec_type')=='audio' for s in streams) else 'missing_audio'}
+    if verification is not None:result['duration_verification']=verification
+    return result
 
 def ready(path,job_id,session_id,file,sha256):
     root=queue_root(path);sid=id_value(session_id);require(re.fullmatch('[0-9a-f]{64}',sha256 or '') is not None,'Expected SHA-256 is required')

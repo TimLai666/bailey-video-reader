@@ -60,12 +60,12 @@ def test_options_and_version_change_identity(tmp_path):
 
 
 def fixture_output(tmp_path):
-    context={'reader_sha256':'readerhash','model_files':{'model.bin':'modelhash'},'versions':{'test':'1'},
+    context={'reader_sha256':'readerhash','webm_duration_sha256':'helperhash','model_files':{'model.bin':'modelhash'},'versions':{'test':'1'},
              'python':'3.12','ffmpeg':'ffmpeg 7','options':{'language':'en'}}
     item={'key':'key','identity':{'source_sha256':'sourcehash','sidecars':{},'context':context}}
     for file in ('asr.json','frames.json','captions.json','alignment.json'):
         reader.write_json(tmp_path/file,{'tracks':[]} if file=='captions.json' else {})
-    m={'status':'complete','source':{'sha256':'sourcehash'},'reader_sha256':'readerhash',
+    m={'status':'complete','source':{'sha256':'sourcehash'},'reader_sha256':'readerhash','webm_duration_sha256':'helperhash',
        'model_files':context['model_files'],'versions':context['versions'],'python_version':context['python'],
        'ffmpeg_version':context['ffmpeg'],'parameters':context['options'],
        'artifact_sha256':{p.name:reader.sha256(p) for p in tmp_path.glob('*.json')}}
@@ -83,6 +83,12 @@ def test_resume_requires_exact_artifact_hashes(tmp_path):
 
 def test_resume_rejects_wrong_context(tmp_path):
     item=fixture_output(tmp_path);item['key']='different'
+    assert not batch.validated_output(tmp_path,item)
+
+
+def test_duration_helper_change_invalidates_resume(tmp_path):
+    item=fixture_output(tmp_path)
+    item['identity']['context']['webm_duration_sha256']='changedhelper'
     assert not batch.validated_output(tmp_path,item)
 
 

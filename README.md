@@ -24,6 +24,8 @@ For a precise original-pixel chart crop: `.venv/bin/python refine_frame.py video
 
 Each output directory must be empty. There is no source-only cache and no overwrite deletion. URL inputs are rejected; acquiring permitted media is a separate action. ffmpeg/ffprobe subprocesses have fixed executable paths, timeouts, no shell, and `file,pipe` protocol restriction. The selected original audio stream is retained as `audio_original.mka`, while ASR gets a separate 16 kHz mono working file.
 
+For a local `.webm` whose container has no duration, a bounded fallback can establish it with a temporary lossless remux. It accepts only warning-free results whose packet payloads, PTS/DTS, durations and side data match the original, and whose source hash remains unchanged. The original file is used for evidence extraction and is never overwritten. This fallback is limited to 256 MiB input, 250,000 packets, 64 MiB of streamed packet metadata per scan, a two-hour packet timeline and 60 seconds total. It requires temporary free space of at least `1.25 × input bytes + 40 MiB`; normal failures, internal timeouts and main-thread CLI SIGTERM/SIGINT unwind cleanup. Incomplete timing, warnings, timeouts or limits cause refusal rather than a guessed duration. Normal files with declared duration do not run this fallback. See [WebM validation and limits](WEBM_DURATION_VALIDATION.md). This does not repair browser Blob download transfer or prove that every intended recording second was captured.
+
 ### Preserve evidence without running local ASR
 
 Use the explicit, local-media-only `--skip-asr` option when transcription is handled separately:

@@ -112,6 +112,7 @@ def runtime_context(args):
     if not (model / "model.bin").is_file():
         raise ValueError("Batch requires an explicitly prepared local model")
     return {"reader_sha256": reader.sha256(ROOT / "reader.py"),
+            "webm_duration_sha256": reader.sha256(ROOT / "capture_queue" / "webm_duration.py"),
             "batch_reader_sha256": reader.sha256(Path(__file__)),
             "upstream_manifest_sha256": reader.sha256(ROOT / "upstream-source.json"),
             "model_files": {p.name: reader.sha256(p) for p in model.glob("*") if p.is_file()},
@@ -157,6 +158,8 @@ def validated_output(path, item):
         if m.get("reader_sha256") != item["identity"]["context"]["reader_sha256"]:
             return False
         context = item["identity"]["context"]
+        if m.get("webm_duration_sha256") != context["webm_duration_sha256"]:
+            return False
         if m.get("model_files") != context["model_files"] or m.get("versions") != context["versions"]:
             return False
         if m.get("python_version") != context["python"] or m.get("ffmpeg_version") != context["ffmpeg"]:

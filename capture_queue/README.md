@@ -50,6 +50,8 @@ Readiness makes a queue-owned copy, hashes it against the required expected SHA,
 
 The first version accepts local MP4/WebM/MKV/MOV/M4V/AVI, up to 2 GiB and two hours. Existing reader limits still apply, including its frame budget; queue admission does not promise a long programme will fit those processing limits.
 
+If a local WebM lacks container duration, readiness and the reader use the shared [verified-duration fallback](../WEBM_DURATION_VALIDATION.md). It leaves original bytes unchanged, permits only a warning-free temporary lossless remux with identical packet payloads/timestamps/side data, and records the verification in the ready receipt. Its stricter limits are 256 MiB input, 250,000 packets, 64 MiB streamed metadata per scan and 60 seconds total; existing files with declared duration retain the normal admission path. Invalid/truncated-warning, over-limit or timed-out input fails readiness. A recording that stops cleanly at an earlier valid boundary cannot be distinguished from an intended short recording without separate capture-length evidence.
+
 ## Recovery and isolation
 
 - A per-queue consumer lock permits one ASR worker. Short state locks let the producer submit later jobs while ASR runs
