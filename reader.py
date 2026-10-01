@@ -332,7 +332,8 @@ def process(args):
         manifest["elapsed_seconds"] = round(time.monotonic()-started, 3)
         manifest["peak_rss_mb"] = round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 2)
         manifest["child_peak_rss_mb"] = round(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024, 2)
-        manifest["versions"] = {p: importlib.metadata.version(p) for p in ("faster-whisper", "ctranslate2", "onnxruntime", "Pillow")}
+        manifest["versions"] = {p: importlib.metadata.version(p) for p in ("faster-whisper", "ctranslate2", "onnxruntime", "av", "Pillow")}
+        manifest["python_version"] = sys.version.split()[0]
         manifest["ffmpeg_version"] = run(["ffmpeg", "-version"]).stdout.splitlines()[0]
         manifest["artifact_sha256"] = {str(p.relative_to(out)): sha256(p) for p in out.rglob("*") if p.is_file() and p.name != "manifest.json"}
         write_json(out / "manifest.json", manifest)

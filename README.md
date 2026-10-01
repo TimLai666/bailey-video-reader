@@ -24,6 +24,31 @@ For a precise original-pixel chart crop: `.venv/bin/python refine_frame.py video
 
 Each output directory must be empty. There is no source-only cache and no overwrite deletion. URL inputs are rejected; acquiring permitted media is a separate action. ffmpeg/ffprobe subprocesses have fixed executable paths, timeouts, no shell, and `file,pipe` protocol restriction. The selected original audio stream is retained as `audio_original.mka`, while ASR gets a separate 16 kHz mono working file.
 
+## Multiple local videos or audio files
+
+```sh
+# Conservative default: one worker
+.venv/bin/python batch_reader.py one.mp4 two.mp4 recording.wav -o new-batch
+
+# Optional bounded parallelism: at most two workers
+.venv/bin/python batch_reader.py one.mp4 two.mp4 -o new-batch-two --workers 2 --threads 4
+
+# JSON format: ["one.mp4", "two.mp4"] or {"inputs": ["one.mp4", "two.mp4"]}
+# Paths in the JSON file are relative to that file.
+.venv/bin/python batch_reader.py --manifest inputs.json -o new-batch
+
+# Same inputs/options; intact completed jobs are verified before reuse.
+.venv/bin/python batch_reader.py --manifest inputs.json -o new-batch --resume
+```
+
+Each item gets an isolated job directory and a fresh attempt directory. An output-directory lock prevents simultaneous batch writers. A missing file, corrupt recording, extraction error or worker timeout is recorded without stopping the other items. Default per-item timeout is 3600 seconds; change it with `--job-timeout-seconds`. Two workers load separate model instances, so they consume more memory. A best-effort startup memory check may reduce concurrency to one or refuse insufficient headroom. CPU threads per worker are capped against detected CPU count. These are admission safeguards, not a hard resource sandbox.
+
+`batch.json` and immutable numbered run reports list each item's source duration, processed window, number of sampled frames, ASR status, caption tracks/issues, unclassified audio gaps, warnings, runtime and memory. They explicitly state `analysis_status: not_performed`. **Finishing preprocessing does not mean an assistant has watched or understood every video.** Actual image inspection, transcript/caption reading, cross-checking and synthesis are separate work.
+
+Resume checks source and sidecar content hashes, options, reader/batch code, upstream identity, model files, runtime versions, and every generated evidence artifact. Changed, missing, failed or corrupted evidence gets a new attempt; there is no URL-only or filename-only cache. Captions in batch mode use the same-basename/language-sidecar and embedded-track discovery; the batch JSON currently accepts paths rather than per-item option objects.
+
+The default 1200-frame limit permits at most about 20 minutes at a one-second density floor, and frequent cuts can hit the limit sooner. Longer shows require an explicit window or changed frame budget/interval. Sampling more sparsely can miss evidence. Long-form TV-scale throughput, arbitrary YouTube acquisition and complete daily program coverage have not been validated. See `BATCH_VALIDATION.md` for measured short-batch performance and failure/resume tests.
+
 ## Evidence contract
 
 - `manifest.json`: status, source SHA-256, upstream commit, model/version/parameter provenance, chosen streams, runtime/peak memory, artifact hashes

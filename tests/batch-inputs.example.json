@@ -1,0 +1,8 @@
+{
+  "inputs": [
+    "../fixtures/chart_speech/chart_speech.mp4",
+    "../fixtures/mandarin/mandarin_chart.mkv",
+    "../fixtures/chart_speech/audio_0.wav",
+    "../fixtures/speech.mp3"
+  ]
+}
