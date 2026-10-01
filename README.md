@@ -83,3 +83,8 @@ Upstream MIT license and notices are retained in `upstream/LICENSE` and `upstrea
 ## Offline browser evidence import
 
 Use `reader.py exported.json --browser-evidence -o new-output` for the separately validated browser-bundle importer. Read [BROWSER_IMPORT.md](BROWSER_IMPORT.md) for v0.2 requirements, capture gaps, session identity, ASR status and the explicit browser-import manifest variant. The current deployed private prototype still exports v0.1; matching v0.2 page changes are local only. Real browser recording and multiple-tab validation are still blocked/unverified. This input path is not yet supported by `batch_reader.py` or its resume cache.
+
+
+## Experimental capture-to-ASR queue
+
+The [finite local queue](capture_queue/README.md) lets a producer hand off the next already-landed video while one ASR consumer processes earlier files. It does not control or record a browser, recover browser downloads, or implement multi-tab capture or remote ASR. Recording-origin timestamps are not automatically aligned to the original programme. The consumer drains ready work and exits; it is not a daemon. See [queue validation and limits](capture_queue/VALIDATION.md).
