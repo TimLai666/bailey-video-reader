@@ -1,0 +1,16 @@
+.venv/
+.cache/
+models/
+fixtures/
+reports/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.wav
+*.mp3
+*.mp4
+*.mka
+*.bin
+.env*
+
+*.ses

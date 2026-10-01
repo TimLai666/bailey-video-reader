@@ -1,0 +1,175 @@
+{
+  "repository": "https://github.com/HUANGCHIHHUNGLeo/claude-real-video",
+  "tag": "v0.10.7",
+  "commit": "0b4149d5c68fe3a5d6b01d6601c322378e703a89",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "git_blob_sha": "afe06338ca0275e5d3dec602b7e87e9c8010a195",
+      "size": 621,
+      "sha256": "1bcc04e62f3b460f92a8ef6da2aec3161b6114490c3d4ec904af5a7aa73c895c"
+    },
+    {
+      "path": "ATTRIBUTIONS.md",
+      "git_blob_sha": "1c7cb61f0b2375c8dd423ba5c3963fc343dfe31d",
+      "size": 650,
+      "sha256": "c1a72c6a6407757eee3891718cf7cf07528c0799b70b5cace8773badf3e6058b"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "git_blob_sha": "202ece3ada9bcc43096056aaebf79b04bc81e8a3",
+      "size": 1359,
+      "sha256": "b56feae636228735277f19844e5a701b3be0dc50bd6235a010455bfd9f19be28"
+    },
+    {
+      "path": "LICENSE",
+      "git_blob_sha": "792717faec9c88fa4a144fb3b90e9a8bacf8290c",
+      "size": 1064,
+      "sha256": "849d4cf26f3deffcc19db16c922407481382a93388698da38ada3a5a4f10eb46"
+    },
+    {
+      "path": "README.md",
+      "git_blob_sha": "cb3c26334915b4b97d9ca6154cc12f1bf48f943e",
+      "size": 27369,
+      "sha256": "fc791d41489685ae9907c4428c2f758eeb6fd86d5a0cd4bf018d531a2de75ea5"
+    },
+    {
+      "path": "pyproject.toml",
+      "git_blob_sha": "79164d71443a9d1edcef9a740f732ee4f1628ba5",
+      "size": 1831,
+      "sha256": "0a27158950242c92e5dadfa60811bad1cfd92a15507893b4af3f009e42416782"
+    },
+    {
+      "path": "src/claude_real_video/__init__.py",
+      "git_blob_sha": "60b7e6eb4be176d8ac40d27a728e840b2223ba9c",
+      "size": 430,
+      "sha256": "7e42453dff919b225a0bf971da19cfae7dee39f2f0428200b18d887cd8651511"
+    },
+    {
+      "path": "src/claude_real_video/__main__.py",
+      "git_blob_sha": "2376f7b42401374769bd8eea040e5d241130cee1",
+      "size": 139,
+      "sha256": "f73682b63ab5cb1207cd70eee2ecdb6d2f4a88b416db2d47a59b752315aa9c1c"
+    },
+    {
+      "path": "src/claude_real_video/cli.py",
+      "git_blob_sha": "8ad2f3a1bde0efa8bb9c6b7aed5031a2c46446d3",
+      "size": 14432,
+      "sha256": "a088b4414f5dba36f65cdf607a4c08473c59e51d0b8e7e9ba41d4da06fd78c79"
+    },
+    {
+      "path": "src/claude_real_video/core.py",
+      "git_blob_sha": "a36c5732f70ab599f1b7bdd409b86aeb5826bc46",
+      "size": 86112,
+      "sha256": "e55ac7a26d92b723a3c38351ce60a56964e7221cf5ba0c3c73b0aaa86fbb5841"
+    },
+    {
+      "path": "src/claude_real_video/export_llc.py",
+      "git_blob_sha": "b88ae2d59258dfefe17d5d8819c033790dd55671",
+      "size": 1586,
+      "sha256": "9d6ee0fc41b7eda33017d41d128dafd475f0b268e72993e4333ca5da6d9a0814"
+    },
+    {
+      "path": "src/claude_real_video/mcp_server.py",
+      "git_blob_sha": "69512f86d1e763c9625454273c1f45bd3c87c548",
+      "size": 10187,
+      "sha256": "2138d1dffd66a726c3faf88034d7a355a1c4902b121c455433695f92e5d921e8"
+    },
+    {
+      "path": "src/claude_real_video/memory.py",
+      "git_blob_sha": "2eb405d9a84bc7e713fd1a62379a19a1e6fad33f",
+      "size": 23332,
+      "sha256": "4446cc41e1bcad2ad53cc7e11265c87bca79ef05cd1d21f535a938d95f206099"
+    },
+    {
+      "path": "src/claude_real_video/serve.py",
+      "git_blob_sha": "342c8952d58681b6de19031ffa892bb9fde2bd1c",
+      "size": 11327,
+      "sha256": "8493c50ae251a6947b4f07794472e269a1a0dcd44e26bb479c0f677174fae606"
+    },
+    {
+      "path": "src/claude_real_video/speakers.py",
+      "git_blob_sha": "ef2ee4ea3d336bc7dce572dc84ca105c6ae90bd7",
+      "size": 8017,
+      "sha256": "ac504b2fccb03ce8e434cbbdcb9767a37aef034879bed96aaa6681ae3b736ee3"
+    },
+    {
+      "path": "src/claude_real_video/temporal_check.py",
+      "git_blob_sha": "7be1a599afb58c79533bf2414d2add819a214838",
+      "size": 3673,
+      "sha256": "66f3c398cb4d53006f2ab99f7b38146a4dfa545ed76ad02aea32fa1e7554387f"
+    },
+    {
+      "path": "src/claude_real_video/timeline_lite.py",
+      "git_blob_sha": "41cc273cd64d1204faa7793d83cacfa559f8b981",
+      "size": 3620,
+      "sha256": "1a25b0651fb96785a137245a3a168c88759d07393b5bd5271646970d2a300dfa"
+    },
+    {
+      "path": "src/claude_real_video/viewer.py",
+      "git_blob_sha": "26f6aae404fbce30c53585f52aac476db141e345",
+      "size": 8293,
+      "sha256": "1054e5b867fa251d9b0e5cc97158d91851edfb0175778c8d241dd2ec5ec25ba2"
+    },
+    {
+      "path": "tests/test_download_hint.py",
+      "git_blob_sha": "1c7873d7efc083609f0d8cd04c40e4a9cfb55c06",
+      "size": 1005,
+      "sha256": "2083ddf165f0b4eb72248359425d8c70d67697bc1b666943e57325630a99c054"
+    },
+    {
+      "path": "tests/test_memory.py",
+      "git_blob_sha": "dafb5797480714d497fab0e739b8f15fa73324a6",
+      "size": 12849,
+      "sha256": "66f4a3ca6d314a921aeab52e506e857b31478b7488a60d776fc4c8762f3285eb"
+    },
+    {
+      "path": "tests/test_mlx_backend.py",
+      "git_blob_sha": "dfa1a32ea734a55ed2450757c4d29186e29510d8",
+      "size": 14840,
+      "sha256": "caf15b4b6681b94a83ce25b25c95b342a6375a2248fd786b23fd5e84114765a9"
+    },
+    {
+      "path": "tests/test_smoke.py",
+      "git_blob_sha": "61ea2885399e0ae05585e472c14ff7013bd1fabe",
+      "size": 7823,
+      "sha256": "79ba820e87df7eb6110060285fa730cb3a614133a928336da521d6aedf259921"
+    },
+    {
+      "path": "tests/test_subtitle_failure_fallback.py",
+      "git_blob_sha": "342082d15e735c71c76dcd0b3356c8e03b47b1d4",
+      "size": 3269,
+      "sha256": "f7119aaa68a0b780f05585f90de0e4318a696aed1bc48c2bb985e599ac7133fd"
+    },
+    {
+      "path": "tests/test_subtitle_header.py",
+      "git_blob_sha": "e891ef1990133585009b848ae3d8221e6a34386c",
+      "size": 2404,
+      "sha256": "a0a472ffd3db08f8ff0058d440a97242df3dbe14eb13a830bd5b9461fa3a4022"
+    },
+    {
+      "path": "tests/test_subtitle_window.py",
+      "git_blob_sha": "ac2d67c842f1a1db623fa8b9e5f25d2459635a29",
+      "size": 5811,
+      "sha256": "c99bdf1683df9dd6103ba6ace1fb78ea62ca19c54a1ebf0d0ed37744b7de2ff2"
+    },
+    {
+      "path": "tests/test_temporal_window.py",
+      "git_blob_sha": "8318ca33aaeb0f6c63aff877235f69790fc74aee",
+      "size": 2103,
+      "sha256": "949c7f5241d546ddef16a6d8f782aba7edb3ff471a82ea3727fac702ad6489b0"
+    },
+    {
+      "path": "tests/test_text_anchors.py",
+      "git_blob_sha": "3b1c1b5b22201fa799230c997a3d8e8e130ae8f2",
+      "size": 4310,
+      "sha256": "b196e520ecfecf12f8305c87b85007311004e9ecb4d9966d9d450b5deb0a6451"
+    },
+    {
+      "path": "tests/test_window.py",
+      "git_blob_sha": "fed4550d89458b8fb74b2dbe734f6eac98f85197",
+      "size": 3895,
+      "sha256": "773369bd579e821fae2b1a70f68577f2719cdcc3a84577b20fdef8671ca7cdee"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# CPU-only, narrow runtime. Full resolved environment is in requirements.lock.
+faster-whisper==1.2.1
+ctranslate2==4.8.2
+# PyAV 19 removed metadata_errors; faster-whisper 1.2.1 needs the older API.
+av==16.1.0
+Pillow==12.3.0
+httpx[socks]==0.28.1

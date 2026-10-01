@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claude-real-video"
+version = "0.10.7"
+description = "Let Claude (or any LLM) actually watch a video — scene-aware, deduplicated frames + transcript, from a URL or local file."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "LeoAido" }]
+keywords = ["claude", "llm", "ai", "video", "ffmpeg", "whisper", "yt-dlp", "transcription", "vision"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Multimedia :: Video",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "yt-dlp[default,deno]>=2026.8.19",  # YouTube changed player checks again in Aug 2026: 2026.07.x gets HTTP 403 on video data; [deno] bundles the JS runtime so URL downloads work with zero setup
+  "Pillow>=9.0.0",
+]
+
+[project.optional-dependencies]
+whisper = ["openai-whisper>=20240930"]
+fast = ["faster-whisper>=1.1.0"]
+# faster-whisper is not the engine here — it supplies the Silero VAD that
+# pre-gates mlx-whisper (which has no VAD of its own) against hallucinated captions.
+# 1.2.0 is the floor: SpeechTimestampsMap.get_original_time gained is_end there.
+mlx = ["mlx-whisper>=0.4", "faster-whisper>=1.2.0"]
+speakers = ["sherpa-onnx>=1.13.4", "numpy>=1.24"]
+mcp = ["mcp>=1.2"]
+
+[project.scripts]
+claude-real-video = "claude_real_video.cli:main"
+crv = "claude_real_video.cli:main"
+crv-web = "claude_real_video.serve:main"
+crv-mcp = "claude_real_video.mcp_server:main"
+crv-ask = "claude_real_video.memory:main"
+
+[project.urls]
+Homepage = "https://github.com/HUANGCHIHHUNGLeo/claude-real-video"
+Issues = "https://github.com/HUANGCHIHHUNGLeo/claude-real-video/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]

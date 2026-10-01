@@ -1,0 +1,226 @@
+"""Command-line interface for claude-real-video."""
+import argparse
+import os
+import sys
+import time
+from pathlib import Path
+
+from .core import process
+
+
+def main() -> None:
+    # Windows consoles default to a legacy codepage (e.g. cp950 on zh-Hant),
+    # which cannot encode the ✓/→/— glyphs below and crashes the CLI on exit
+    # even though processing succeeded. Force UTF-8 so output is codepage-safe.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+    ap = argparse.ArgumentParser(
+        prog="claude-real-video",
+        description="Let Claude (or any LLM) actually watch a video: scene-aware, "
+                    "deduplicated frames + a transcript, from a URL or a local file.",
+    )
+    ap.add_argument("source", help="Video URL (YouTube, Instagram, ...) or a local file path")
+    ap.add_argument("-o", "--out", default="crv-out", help="Output directory (default: ./crv-out)")
+    ap.add_argument("--overwrite", action="store_true",
+                    help="Replace a previous analysis living in the output directory "
+                         "(without this, a non-empty output dir is refused to avoid mixing videos)")
+    ap.add_argument("--scene", type=float, default=0.30,
+                    help="Scene-change sensitivity 0-1, lower = more frames (default: 0.30)")
+    ap.add_argument("--fps-floor", "--min-frame-interval", dest="fps_floor", type=float, default=1.0,
+                    help="SECONDS PER FRAME, not fps — guarantee at least one frame "
+                         "every N seconds (default: 1.0; --min-frame-interval is an alias)")
+    ap.add_argument("--max-frames", type=int, default=None,
+                    help="Cap total frames (default: auto — scales with duration, "
+                         "clamp(150, seconds*1.5, 600))")
+    ap.add_argument("--from", dest="start", default=None, metavar="TIMECODE",
+                    help="Analyse only from this point (90, 1:30, 0:01:30.5). Reported "
+                         "timestamps stay source timecodes, not window-relative")
+    ap.add_argument("--to", dest="end", default=None, metavar="TIMECODE",
+                    help="Stop analysing here. With --from, the frame budget and the "
+                         "transcript follow the window instead of the whole file")
+    ap.add_argument("--frame-width", type=int, default=640, metavar="PX",
+                    help="Width of extracted frames, aspect kept (default: 640). Raise it "
+                         "when the meaning is small text — terminals, spreadsheets, dense "
+                         "dashboards. Larger frames multiply output size and model cost")
+    ap.add_argument("--adaptive", action="store_true",
+                    help="Adaptive scene detection: catches slow morphs (2-3s squash/stretch, "
+                         "gradual pans) a fixed threshold misses, by comparing each frame "
+                         "against its rolling neighbourhood instead of a constant")
+    ap.add_argument("--text-anchors", action="store_true",
+                    help="Force extra frames at subtitle-cue timestamps (sidecar .srt/.vtt "
+                         "or embedded track) — for videos where meaning changes faster than "
+                         "pixels: burned-in captions, lecture slides, screen recordings. "
+                         "At most one forced frame per second; scene detection unchanged")
+    ap.add_argument("--export", choices=["llc"], default=None,
+                    help="Also export the analysis for other tools. 'llc' writes a "
+                         "lossless-cut project (highlights.llc): every detected scene "
+                         "becomes a cut segment — open it, keep the highlights, delete "
+                         "the rest (issue #10)")
+    ap.add_argument("--speakers", action="store_true",
+                    help="Label who spoke when: offline speaker diarization "
+                         "(sherpa-onnx, no account/token needed — models auto-download "
+                         "on first use). Transcript lines get [SPEAKER_00]-style prefixes; "
+                         "needs: pip install 'claude-real-video[speakers]'")
+    ap.add_argument("--lang", default="auto", help="Whisper language, e.g. en / zh / auto (default: auto)")
+    ap.add_argument("--cookies", default=None,
+                    help="Netscape cookie file for sites that need login (your own, authorised use only)")
+    ap.add_argument("--cookies-from-browser", default=None, metavar="BROWSER",
+                    help="read login cookies straight from your own browser — chrome, safari, "
+                         "firefox or edge. For sites that need login (your own account only)")
+    ap.add_argument("--yt-dlp-arg", dest="ytdlp_args", action="append", default=None, metavar="ARG",
+                    help="pass a raw yt-dlp option straight through; repeat for each token, e.g. "
+                         "--yt-dlp-arg=-S --yt-dlp-arg=res:1080 to skip pulling a 4K master, or "
+                         "--yt-dlp-arg=--remote-components --yt-dlp-arg=ejs:github for YouTube JS "
+                         "challenges. Use this instead of editing your machine-wide yt-dlp config, "
+                         "which would change behaviour for every other tool on the machine")
+    ap.add_argument("--no-transcribe", action="store_true", help="Skip audio transcription")
+    ap.add_argument("--viewer", action="store_true",
+                    help="also write viewer.html — browse the video, keyframes and "
+                         "transcript in one local page (double-click to open)")
+    ap.add_argument("--whisper-model", default="base",
+                    choices=["tiny", "base", "small", "medium", "large", "turbo"],
+                    help="Whisper model for transcription (default: base — fast and "
+                         "small, so the first run isn't a 3GB wait. Want sharper? "
+                         "--whisper-model turbo: a pruned large-v3, much faster than "
+                         "large with a minor quality trade-off (one-time 1.6GB download). "
+                         "medium/large also available — bigger models download more)")
+    ap.add_argument("--dedup-threshold", type=float, default=8,
+                    help="Percent of pixels that must change for a frame to count as new; "
+                         "higher = fewer frames kept (default: 8)")
+    ap.add_argument("--dedup-window", type=int, default=4,
+                    help="Compare each frame against the last N kept frames, so a shot "
+                         "the model already saw doesn't come back after a cutaway "
+                         "(1 = classic consecutive-only, default: 4)")
+    ap.add_argument("--report", action="store_true",
+                    help="Keep dropped frames in ./dropped and write report.html "
+                         "visualising every keep/drop decision, for tuning the threshold")
+    ap.add_argument("--why", default=None,
+                    help='Why you are watching, e.g. --why "find the pricing strategy" — '
+                         "written into MANIFEST.txt so the model analyses with that lens "
+                         "instead of producing a generic summary")
+    ap.add_argument("--grid", action="store_true",
+                    help="Also tile the kept frames into 3x3 contact sheets (./grids) — "
+                         "consecutive frames side by side help the model follow motion "
+                         "and progression instead of guessing between stills")
+    ap.add_argument("--kb", default=None, metavar="DIR",
+                    help="Also save the analysis as a dated markdown note into this "
+                         "knowledge-base folder (e.g. your Obsidian vault)")
+    ap.add_argument("--keep-audio", action="store_true",
+                    help="Also save the full original soundtrack (music + speech) as audio.m4a, "
+                         "for models that can listen to audio (Gemini, GPT-4o, ...)")
+    args = ap.parse_args()
+
+    # Watched this exact source before? Say so instead of silently redoing the
+    # work. Without this the only signal was the "output dir is not empty"
+    # refusal, which tells the user nothing about the analysis they already have.
+    # Every option that changes what a run produces belongs here — the cache-hit
+    # path returns before any of them are honoured, so an option missing from
+    # this dict is an option that silently stops working on a re-run (round
+    # three caught --keep-audio/--grid/--kb being swallowed exactly that way).
+    analysis_params = {
+        "scene": args.scene, "fps_floor": args.fps_floor, "max_frames": args.max_frames,
+        "adaptive": args.adaptive, "text_anchors": args.text_anchors,
+        "dedup_threshold": args.dedup_threshold, "dedup_window": args.dedup_window,
+        "whisper_model": args.whisper_model, "lang": args.lang,
+        "transcribe": not args.no_transcribe, "speakers": args.speakers,
+        "keep_audio": args.keep_audio, "report": args.report, "why": args.why,
+        "export": args.export, "grid": args.grid, "kb": args.kb, "viewer": args.viewer,
+        "start": args.start, "end": args.end, "frame_width": args.frame_width,
+    }
+    if not args.overwrite and not os.environ.get("CRV_NO_MEMORY"):
+        try:
+            import json as _json
+
+            from . import memory as _memory
+            prev = _memory.lookup(args.source)
+            same_params = bool(prev) and prev.get("params") == _json.dumps(
+                analysis_params, sort_keys=True, ensure_ascii=False)
+            if prev and same_params and (Path(prev["out_dir"]) / "MANIFEST.txt").exists():
+                seen = time.strftime("%Y-%m-%d %H:%M", time.localtime(prev["watched_at"]))
+                print(f"✓ Already watched on {seen} — nothing to re-process.")
+                print(f"  analysis:   {prev['out_dir']}")
+                print(f"  manifest:   {Path(prev['out_dir']) / 'MANIFEST.txt'}")
+                print('  ask it:     crv-ask "<what you remember>"   (searches every video you have watched)')
+                print("  redo it:    add --overwrite to watch it again from scratch")
+                return
+        except Exception:  # noqa: BLE001 — memory must never block a real run
+            pass
+
+    try:
+        r = process(
+            args.source, args.out,
+            scene=args.scene, adaptive=args.adaptive, text_anchors=args.text_anchors,
+            fps_floor=args.fps_floor, max_frames=args.max_frames,
+            lang=args.lang, cookies=args.cookies, cookies_from_browser=args.cookies_from_browser,
+            ytdlp_args=args.ytdlp_args,
+            do_transcribe=not args.no_transcribe,
+            whisper_model=args.whisper_model, dedup_threshold=args.dedup_threshold,
+            dedup_window=args.dedup_window, keep_audio=args.keep_audio, report=args.report,
+            why=args.why, overwrite=args.overwrite, speakers=args.speakers,
+            export=args.export,
+            start=args.start, end=args.end, frame_width=args.frame_width,
+        )
+    except Exception as e:  # noqa: BLE001 — surface a clean message to the user
+        print(f"error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    # Index the finished analysis so later questions can find it without
+    # re-watching. Never let a memory problem fail an otherwise good run.
+    remembered = None
+    if not os.environ.get("CRV_NO_MEMORY"):
+        try:
+            from . import memory as _memory
+            remembered = _memory.remember(r.out_dir, source=args.source, tool="crv",
+                                          params=analysis_params)
+        except Exception as e:  # noqa: BLE001
+            print(f"  note: could not index this analysis for later search ({e})", file=sys.stderr)
+
+    print(f"\n✓ Done → {r.out_dir}")
+    print(f"  {r.frame_count} frames  (deduped from {r.extracted_frames} extracted)  in {r.frames_dir}")
+    print(f"  manifest:   {r.manifest_path}")
+    if r.frames_json_path:
+        print(f"  timestamps: {r.frames_json_path}  (per-frame source-video timestamps)")
+    if args.viewer:
+        from .viewer import write_viewer
+        vsrc = os.path.join(r.out_dir, "source.mp4")
+        vp = write_viewer(r.out_dir, vsrc if os.path.exists(vsrc) else (args.source if os.path.exists(args.source) else None))
+        print(f"  viewer:     {vp}  (double-click to open)")
+    if r.report_path:
+        print(f"  report:     {r.report_path}  (open in a browser to tune the threshold)")
+    if r.transcript_path:
+        print(f"  transcript: {r.transcript_path}")
+    else:
+        print(f"  transcript: {r.transcript_note}")
+    if r.audio_path:
+        print(f"  audio:      {r.audio_path}  (full soundtrack — music + speech)")
+    if args.grid:
+        from .core import make_grids
+        sheets = make_grids(r.frames_dir, r.out_dir)
+        print(f"  grids:      {len(sheets)} contact sheet(s) in {r.out_dir}/grids")
+    if args.kb:
+        from .core import save_to_kb
+        dest = save_to_kb(args.kb, r.manifest_path, args.source)
+        print(f"  knowledge base: {dest}")
+    if remembered:
+        print(f"  memory:     indexed {remembered['lines']} searchable lines "
+              f"— ask across every video you've watched with:  crv-ask \"<what you remember>\"")
+    # one quiet pointer, opt out with CRV_NO_HINT=1
+    if not os.environ.get("CRV_NO_HINT"):
+        # use this run's real numbers, not ad copy — deduped keyframes are the
+        # tool's own "the picture actually changed" count, so the claim is honest;
+        # raw extraction counts would inflate static videos with fps-floor samples
+        if r.duration and r.duration > 10 and r.frame_count >= 4:
+            rate = (r.frame_count - 1) / r.duration * 60
+            print(f"  pro:        this video has {r.frame_count - 1} real visual changes (~{rate:.0f}/min).")
+            print("              Pro labels each camera move (pan/zoom/handheld), reads voice emotion,")
+            print("              and builds a clickable timeline → https://leoaido.com/crv-pro/  ($29 one-time · code SEPT10 takes $10 off until Sep 30)")
+        else:
+            print("  pro:        camera-motion + voice-emotion analysis → https://leoaido.com/crv-pro/")
+
+
+if __name__ == "__main__":
+    main()

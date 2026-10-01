@@ -1,0 +1,37 @@
+{
+  "fixture_id": "fleurs-cmn_hans_cn-validation-179",
+  "audio_sha256": "2dc89f0d80494bfbfc06bc13c28d04936af802c94c75ec45c77b4a3cee675745",
+  "audio_bytes": 514618,
+  "audio_format": {
+    "codec": "pcm_f32le",
+    "sample_rate_hz": 16000,
+    "channels": 1,
+    "duration_seconds": 8.04
+  },
+  "dataset": "google/fleurs",
+  "dataset_revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+  "dataset_url": "https://huggingface.co/datasets/google/fleurs",
+  "dataset_config": "cmn_hans_cn",
+  "split": "validation",
+  "row_index": 179,
+  "sample_id": 1566,
+  "original_audio_filename": "17653389814525369948.wav",
+  "reference_transcript": "然而，我们百分之八十的商品在中美洲国家被征收关税。……我们对待你。",
+  "reference_transcript_source_url": "https://huggingface.co/datasets/google/fleurs/resolve/70bb2e84b976b7e960aa89f1c648e09c59f894dd/data/cmn_hans_cn/dev.tsv",
+  "viewer_row_source_url": "https://datasets-server.huggingface.co/rows?dataset=google/fleurs&config=cmn_hans_cn&split=validation&offset=179&length=1",
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "name": "Creative Commons Attribution 4.0 International",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "evidence_url": "https://huggingface.co/datasets/google/fleurs/blob/70bb2e84b976b7e960aa89f1c648e09c59f894dd/README.md",
+    "evidence": "Dataset card YAML license field is cc-by-4.0. The card also states that all datasets are licensed under Creative Commons CC-BY."
+  },
+  "attribution": "FLEURS, Google; Alexis Conneau, Min Ma, Simran Khanuja, Yu Zhang, Vera Axelrod, Siddharth Dalmia, Jason Riesa, Clara Rivera, and Ankur Bapna (2022). FLEURS: Few-shot Learning Evaluation of Universal Representations of Speech. https://arxiv.org/abs/2205.12446. Licensed CC BY 4.0.",
+  "citation_url": "https://arxiv.org/abs/2205.12446",
+  "validation_notes": [
+    "Short read-speech smoke-test fixture only; not a broad Mandarin or financial-domain accuracy benchmark.",
+    "Sentence includes a spoken 80 percent tariff figure; no currency amount.",
+    "Source raw transcript includes an ellipsis and sentence fragment; preserved without editorial correction.",
+    "Only this individual audio asset was downloaded; no audio dataset archive or Parquet shard was downloaded."
+  ]
+}
