@@ -243,6 +243,11 @@ def align_evidence(frames, asr, captions):
 
 
 def process(args):
+    if getattr(args, "browser_evidence", False):
+        from browser_import import import_browser_bundle
+        return import_browser_bundle(args, sys.modules[__name__])
+    if getattr(args, "skip_browser_asr", False):
+        raise ValueError("--skip-browser-asr requires --browser-evidence")
     started = time.monotonic()
     if "://" in args.source:
         raise ValueError("This reader accepts local media only. Acquire authorized media separately.")
@@ -343,6 +348,9 @@ def process(args):
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("source")
+    p.add_argument("--browser-evidence", action="store_true", help="import a local browser evidence JSON or single-member ZIP")
+    p.add_argument("--browser-asr-backend", choices=["local"], default="local", help="local only; remote integration is not implemented")
+    p.add_argument("--skip-browser-asr", action="store_true", help="browser-import structure-only validation; explicitly does not transcribe")
     p.add_argument("-o", "--output", required=True)
     p.add_argument("--model", default=str(ROOT / "models" / "faster-whisper-small"))
     p.add_argument("--language", default="auto")

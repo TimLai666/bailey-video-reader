@@ -79,3 +79,7 @@ Not installed in this baseline. WhisperX can add forced word alignment; its Torc
 ## Attribution
 
 Upstream MIT license and notices are retained in `upstream/LICENSE` and `upstream/ATTRIBUTIONS.md`; exact fetched file hashes and commit are in `upstream-source.json`. The wrapper adapts the scene/density selection and source-PTS approach, and uses upstream timestamp/caption parsers. It deliberately bypasses upstream caption-first transcription, automatic backend fallbacks, downloader, MCP resizing/cache, and memory indexing. Faster-whisper and Whisper weights are MIT; installed FFmpeg/libflite and other dependencies retain their respective licenses.
+
+## Offline browser evidence import
+
+Use `reader.py exported.json --browser-evidence -o new-output` for the separately validated browser-bundle importer. Read [BROWSER_IMPORT.md](BROWSER_IMPORT.md) for v0.2 requirements, capture gaps, session identity, ASR status and the explicit browser-import manifest variant. The current deployed private prototype still exports v0.1; matching v0.2 page changes are local only. Real browser recording and multiple-tab validation are still blocked/unverified. This input path is not yet supported by `batch_reader.py` or its resume cache.
