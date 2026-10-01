@@ -180,5 +180,120 @@
     "pcm_matches_captured_source": true,
     "full_decode_no_warnings_with_source_timing_preserved": true,
     "pcm_equality_to_authored_reference_claimed": false
+  },
+  "manual_external_asr_20261001T143530Z": {
+    "schema": "bailey-manual-external-asr-validation/1",
+    "observed_on_utc": "2026-10-01",
+    "status": "ACCEPT_SINGLE_ENGLISH_SYNTHETIC_CLIP_SEMANTICS_AND_SIDECAR_IMPORT",
+    "evaluated_cli_commit": "56a7052a242963b602f894fa9f5a4b1092f26f86",
+    "input": {
+      "sha256": "b21746373a26092660ae35f8440b74690e14d3b1d5669628e08ff07d704f44ed",
+      "bytes": 2090513,
+      "type": "previously verified 60-second recording of original English synthetic fixture"
+    },
+    "external_asr": {
+      "provider": "Super Captions",
+      "language_selected": "English",
+      "ai_correction": false,
+      "backend_model_version": "unknown",
+      "result_origin": "18 segment triples copied from visible editor fields after operator-observed generation",
+      "editor_observation_sha256": "e08492775e32e6ab08a1d3992854b71e3c6ee740ca0021fc4171f86457ad9794",
+      "reconstructed_srt_sha256": "f25af9e61126e8a41a60c9598efd711af97c949298e8fcdd3bad07d93ea96db1",
+      "downloaded_service_srt": false,
+      "authored_ground_truth": false
+    },
+    "semantic_check": {
+      "marker_groups": 6,
+      "fields_per_group": [
+        "marker",
+        "spoken_time_seconds",
+        "blue_label",
+        "blue_metric",
+        "blue_value",
+        "orange_label",
+        "orange_metric",
+        "orange_value"
+      ],
+      "checked_fields": 48,
+      "matching_fields": 48,
+      "method": "Explicit structured semantic comparison to original fixture generator/ground truth; not WER or a statistical accuracy estimate",
+      "word_error_rate_computed": false
+    },
+    "timing": {
+      "editor_cues": 18,
+      "first_start_seconds": 0.439,
+      "last_end_seconds": 54.848,
+      "positive_monotonic_nonoverlapping": true,
+      "within_recording_and_expected_marker_region": true,
+      "maximum_group_end_difference_from_mapped_authored_speech_end_seconds": 1.6631068761132894,
+      "maximum_difference_marker": 3,
+      "word_level_alignment_verified": false,
+      "authored_boundary_limit": "Rendered synthetic-speech segment endpoint, not a forced-aligned word boundary"
+    },
+    "cli_import_runs": [
+      {
+        "elapsed_seconds": 3.436,
+        "sampled_frames": 12,
+        "interval": 5.0,
+        "max_frames": 20,
+        "linked_distinct_caption_cues": 3,
+        "source_pts_present": true,
+        "all_artifact_hashes_match": true,
+        "caption_raw_bytes_match": true,
+        "retained_pcm_matches_recording": true,
+        "local_asr_performed": false,
+        "status": "complete_without_asr",
+        "largest_frame_sample_gap_seconds": 5.067999999999998
+      },
+      {
+        "elapsed_seconds": 3.459,
+        "sampled_frames": 58,
+        "interval": 1.0,
+        "max_frames": 1200,
+        "linked_distinct_caption_cues": 18,
+        "source_pts_present": true,
+        "all_artifact_hashes_match": true,
+        "caption_raw_bytes_match": true,
+        "retained_pcm_matches_recording": true,
+        "local_asr_performed": false,
+        "status": "complete_without_asr",
+        "largest_frame_sample_gap_seconds": 1.131999999999998
+      }
+    ],
+    "provenance": {
+      "reader_caption_origin": "supplied_sidecar",
+      "external_asr_observed_by_browser_operator": true,
+      "reviewer_revisited_service": false,
+      "local_asr_performed": false,
+      "direct_assistant_listening": false,
+      "retained_audio_pcm_sha256": "53347f5da08608e4ab97c208930d94c8a6d11c8be958b587a37086c6ecba8a3a",
+      "authored_truth_kept_separate": true
+    },
+    "visual_check": {
+      "known_marker_charts": 6,
+      "result": "Observed text matches revenue blue 120/orange 80 and profit blue 10/orange 30; displayed chart labels and values were checked from actual saved images",
+      "dense_frame_caption_overlap_limit": "All 18 cues overlap at least one of 58 sampled frames; temporal association is not forced alignment or continuous coverage"
+    },
+    "limits": [
+      "A single English synthetic clip does not validate Mandarin speech, television programmes, general ASR accuracy, or long-media use",
+      "Service backend model/version unknown",
+      "Caption file reconstructed from editor values, not a downloaded service export",
+      "No direct assistant hearing or WER zero claim",
+      "Original no-ASR runs retain their historical provenance; the new external ASR step is separate",
+      "No real target television programme was watched in this validation"
+    ],
+    "independent_qa_sha256": "8fe330517d3d769d3127172247efb942d8b189d6bd905bc2a6f848cd1fcfa430",
+    "observed_at_utc": "2026-10-01T14:35:30Z",
+    "direct_cli_service_connector": false,
+    "external_service_rerun_during_review": false,
+    "publication_review": {
+      "checked_at_utc": "2026-10-01T14:45:23.398306+00:00",
+      "all_71_base_blobs_verified": true,
+      "publisher_independently_checked_48_fields": true,
+      "both_cli_run_artifacts_pts_sidecar_bytes_and_pcm_verified": true,
+      "repository_suite_rerun": false,
+      "code_changes": false,
+      "prior_validation_fields_unchanged": true
+    }
   }
 }
