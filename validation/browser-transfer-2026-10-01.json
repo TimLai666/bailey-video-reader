@@ -1,0 +1,184 @@
+{
+  "schema": "bailey-browser-transfer-validation/1",
+  "validation_date_utc": "2026-10-01",
+  "evaluated_cli_commit": "4720f6337bdcee7958e63b399db35298b1e2899a",
+  "sixty_second_capture": {
+    "schema": "bailey-public-av-validation/1",
+    "recorded_on_utc": "2026-10-01",
+    "source": {
+      "type": "original self-made audiovisual fixture",
+      "license": "CC0-1.0",
+      "authoring": "Original charts with installed Pillow, synthetic speech with FFmpeg/libflite, six ten-second marker segments",
+      "duration_seconds": 60,
+      "video_frames": 900,
+      "sha256": "545be30628834e4e942589a2cb318453013208177269336da4e1404eb725cd97"
+    },
+    "recording": {
+      "method": "One approved foreground browser tab and only its tab audio; MediaRecorder; same-origin HTTPS transfer",
+      "bytes": 2090513,
+      "sha256": "b21746373a26092660ae35f8440b74690e14d3b1d5669628e08ff07d704f44ed",
+      "requested_seconds": 60,
+      "browser_reported_seconds": 60.00039999999991,
+      "media_timeline_seconds": 60.0
+    },
+    "cli": {
+      "commit": "4720f6337bdcee7958e63b399db35298b1e2899a",
+      "source_worktree_verified_unmodified": true,
+      "status": "complete_without_asr",
+      "local_asr_performed": false,
+      "runtime_seconds": 2.977,
+      "sampled_frames": 12,
+      "selected_frame_pts_match_decoded_video": true,
+      "parameters": {
+        "skip_asr": true,
+        "interval_seconds": 5.0,
+        "max_frames": 20
+      }
+    },
+    "decoded_video": {
+      "frames": 872,
+      "first_pts": 0.051,
+      "last_pts": 59.902,
+      "minimum_interval_seconds": 0.04999999999999999,
+      "median_interval_seconds": 0.06700000000000017,
+      "maximum_interval_seconds": 0.13500000000000512,
+      "intervals_over_150ms": 0,
+      "non_monotonic_intervals": 0
+    },
+    "audio": {
+      "sample_rate": 48000,
+      "channels": 1,
+      "samples": 2880000,
+      "seconds": 60.0,
+      "rms_dbfs": -18.04238259711673,
+      "pcm_sha256": "53347f5da08608e4ab97c208930d94c8a6d11c8be958b587a37086c6ecba8a3a",
+      "retained_audio_pcm_matches_recording": true
+    },
+    "source_clock_check": {
+      "method": "Three 14-second normalized waveform-correlation windows at distinct recording positions against the known authored source; three sampled visual clock readings",
+      "accepted_windows": 3,
+      "waveform_correlations": [
+        0.7142761355240091,
+        0.7077787434285312,
+        0.7171132741467997
+      ],
+      "source_minus_recording_audio_offset_seconds": -0.20483333333332748,
+      "window_offset_spread_seconds": 0.0003749999999995701,
+      "source_seconds_per_recording_second": 0.9999895833333331,
+      "observed_approximate_video_lead_seconds": [
+        0.09188659374999553,
+        0.09509697916666582,
+        0.10035942708333323
+      ],
+      "precision_note": "These measurements describe this run; visual clocks are quantized by 15fps source frames. No sample-perfect AV synchronization claim.",
+      "window_recording_starts_seconds": [
+        2,
+        20,
+        38
+      ],
+      "offset_spread_is_not_population_drift_bound": true
+    },
+    "captions": {
+      "origin": "supplied_sidecar",
+      "authorship": "Known authored test ground truth, mapped to the recording clock; not ASR or programme subtitles",
+      "cues": 6,
+      "raw_bytes_preserved": true
+    },
+    "limitations": [
+      "One self-made 60-second clip and one recorder page only",
+      "No speech-recognition accuracy or listening-comprehension claim",
+      "No long-programme, multi-tab, YouTube or financial-programme validation",
+      "872 captured video frames are not a guarantee that all 900 reference frames were preserved",
+      "The first 60-second browser attempt produced no file; this report describes only the successful retry",
+      "Browser timer suspension and the existing single-client storage restrictions remain"
+    ]
+  },
+  "blob_https_control": {
+    "payload_bytes": 38,
+    "mime": "application/octet-stream",
+    "payload_sha256": "e7456fef9c86c6a87ba294f07444678f9d1e9b5790cf89af09268ac2c7326115",
+    "same_payload_in_all_four_completed_controls": true,
+    "completed_controls": [
+      {
+        "route": "HTTPS marker anchor",
+        "api": "locator.downloadMedia",
+        "elapsed_ms": 151,
+        "timeout_ms": 20000,
+        "outcome": "returned_readable_file",
+        "bytes": 38,
+        "sha256": "e7456fef9c86c6a87ba294f07444678f9d1e9b5790cf89af09268ac2c7326115",
+        "exact_marker": true
+      },
+      {
+        "route": "HTTPS marker anchor",
+        "api": "prearmed waitForEvent(download) + normal click, then path",
+        "elapsed_ms": 1116,
+        "timeout_ms": 20000,
+        "outcome": "returned_readable_file",
+        "bytes": 38,
+        "sha256": "e7456fef9c86c6a87ba294f07444678f9d1e9b5790cf89af09268ac2c7326115",
+        "exact_marker": true
+      },
+      {
+        "route": "retained Blob marker attached anchor",
+        "api": "prearmed waitForEvent(download) + normal click",
+        "elapsed_ms": 20009,
+        "timeout_ms": 20000,
+        "outcome": "no_download_artifact_returned_within_timeout",
+        "revoked_during_observation": false
+      },
+      {
+        "route": "Blob marker attached anchor, revoke 2 seconds after click",
+        "api": "prearmed waitForEvent(download) + normal click",
+        "elapsed_ms": 20007,
+        "timeout_ms": 20000,
+        "outcome": "no_download_artifact_returned_within_timeout",
+        "observed_revocation_delay_ms": 2001
+      }
+    ],
+    "additional_media_comparisons": "No established result; interrupted comparisons unknown and remaining cases not run",
+    "conclusion": "A retained small Blob failed to return a workspace artifact within 20 seconds while identical HTTPS bytes succeeded through both supported routes",
+    "platform_internal_root_cause": "unproven",
+    "direct_blob_export_fixed": false,
+    "timeout_does_not_establish_no_bytes_written_in_browser_environment": true,
+    "explicit_blob_cleanup_observed": false,
+    "evidence_scope": "Browser operator records plus independently read/hash-verified HTTPS artifacts; no independent browser replay"
+  },
+  "interruptions": {
+    "earlier_workspace_reset": "Separate earlier event; not evidence of the Blob timeout cause",
+    "first_sixty_second_attempt": "Temporary browser tabs disappeared before file retrieval; no artifact from that attempt",
+    "successful_retry": "Source and recorder tabs were explicitly marked for retention; successful receipt applies only to this retry",
+    "causal_platform_diagnosis": false
+  },
+  "cleanup": {
+    "temporary_server_copy_ui_deletion_confirmed_at_utc": "2026-10-01T13:07:52Z",
+    "download_endpoint_404_retested": false,
+    "evidence_scope": "Browser operator UI observation; independent media reviewer did not verify remote deletion"
+  },
+  "publication_review": {
+    "all_69_evaluated_source_blobs_match_public_commit": true,
+    "capture_and_output_artifact_hashes_verified": true,
+    "all_12_sampled_pts_present_in_original_decoded_frames": true,
+    "preserved_audio_pcm_independently_decoded_and_compared": true,
+    "three_saved_visual_clock_frames_inspected": true,
+    "code_changes": false,
+    "repository_suite_rerun": false,
+    "scope": "Sanitized aggregate validation only; no media, frames, full captions, private URLs, credentials or session identifiers",
+    "independent_media_review_accepted": true,
+    "independent_review_scope": "Landed media, CLI output hashes/PTS, PCM and waveform checks, three actual clock images; browser operations and deletion remain operator evidence"
+  },
+  "independent_cli_rerun": {
+    "commit": "4720f6337bdcee7958e63b399db35298b1e2899a",
+    "parameters": {
+      "skip_asr": true,
+      "interval_seconds": 1.0,
+      "max_frames": 1200
+    },
+    "runtime_seconds": 3.098,
+    "sampled_frames": 58,
+    "all_artifact_hashes_and_pts_checked": true,
+    "pcm_matches_captured_source": true,
+    "full_decode_no_warnings_with_source_timing_preserved": true,
+    "pcm_equality_to_authored_reference_claimed": false
+  }
+}
