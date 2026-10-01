@@ -92,7 +92,7 @@ def register(path,session_id,source_id,job_id=None):
     return j
 
 def media_probe(path):
-    r=subprocess.run(['/usr/bin/ffprobe','-v','error','-protocol_whitelist','file,pipe','-show_entries','format=duration,format_name:stream=index,codec_type,codec_name','-of','json',str(path)],capture_output=True,text=True,timeout=30)
+    r=subprocess.run(['/usr/bin/ffprobe','-v','error','-protocol_whitelist','file,pipe','-show_entries','format=duration,format_name:stream=index,codec_type,codec_name,sample_rate','-of','json',str(path)],capture_output=True,text=True,timeout=30)
     require(r.returncode==0,'Local file is not a readable supported media container')
     m=json.loads(r.stdout);duration,verification=resolve_duration(path,m);require(0<duration<=7200,'Media duration missing or over two hours')
     streams=m.get('streams',[]);require(any(s.get('codec_type')=='video' for s in streams),'Queue accepts already-landed video files only')

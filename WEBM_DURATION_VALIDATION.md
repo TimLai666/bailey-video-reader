@@ -65,6 +65,40 @@ Run the entire reader/importer/queue suite after generating integration artifact
 
 ## Remaining limits
 
-A file ending cleanly at a valid packet/cluster boundary can look like an intentionally short recording. Container validity and a clean remux cannot establish that the intended recording end was captured; that requires independent expected-length/acquisition evidence. Missing/non-finite packet timing, timestamp changes, unsupported mux behavior or warnings are refused instead of being repaired speculatively. The 100 ms extent comparison is a conservative container/codec consistency check, not word alignment or original-programme clock verification.
+A file ending cleanly at a valid packet/cluster boundary can look like an intentionally short recording. Container validity and a clean remux cannot establish that the intended recording end was captured; that requires independent expected-length/acquisition evidence. Missing PTS/DTS, non-finite timing, timestamp changes, unsupported mux behavior or warnings are refused instead of being repaired speculatively. The 100 ms extent comparison is a conservative container/codec consistency check, not word alignment or original-programme clock verification.
 
 Transcription remains separate from visual/audio interpretation. The fallback neither runs a speech service nor turns sidecar text into original subtitles or direct listening. Browser capture permissions, source acquisition, Blob transfer, website automation and multi-tab recording are unaffected.
+
+
+## MediaRecorder video packets with unspecified duration
+
+A real, normally permitted browser recording exposed another legitimate WebM form: the container had no declared duration, and 41 of 140 VP9 packets had no packet duration. All PTS/DTS and 166 Opus packet durations were present. The published `4fa1be3` fallback conservatively refused this file. Matroska permits omitted `DefaultDuration`/`BlockDuration`; it does not establish the duration of the final displayed video frame. See the [Matroska element specification](https://www.matroska.org/technical/elements.html#BlockDuration).
+
+The additional branch is restricted to VP8/VP9 video with Opus audio. It:
+
+- Normalizes only the source packet positions whose video duration was originally unspecified. Any original known duration, PTS/DTS, payload hash, packet size/flags, and side data must remain identical. The independent raw packet digests before/after are also retained, so newly populated durations are visible rather than silently represented as identical
+- Requires a reliable Opus packet endpoint to cover video timestamps, and decodes every source/remux frame to compare frame/sample timestamps and counts. Decoded Opus sample endpoints must agree with the packet endpoint within 100 ms; remux container duration is checked against the observed packet extent
+- Reports the interval between the last decoded video frame timestamp and the audio endpoint as `video_tail_hold_unverified_seconds`. It does not fill that interval, manufacture a video duration, or infer real FPS from `r_frame_rate`
+- Refuses missing audio duration, missing PTS/DTS, video extending past the audio endpoint, changed known timing/payloads/flags, decoder warnings, truncation warnings, or elapsed resource limits. Video-only files whose packet durations are missing still fail; the prior complete-timing video-only path remains supported
+
+The new ordinal set holds at most 250,000 integers. Packet and decoded-frame metadata remain streamed and bounded at 64 MiB per scan; decoded-frame count is also capped at 250,000. Both extra full decodes share the existing 60-second fallback deadline. This may reject a large or expensive-to-decode recording; there is no long-programme throughput claim. Normal declared-duration inputs retain their fast path.
+
+### Actual short recording, separately from synthetic tests
+
+One approved foreground browser tab played the [W3C HTML5 Video demonstration](https://www.w3.org/2010/05/video/mediaevents.html), with its tab audio. The selected content was the Sintel teaser, © copyright Blender Foundation | durian.blender.org, [CC BY 3.0](https://durian.blender.org/sharing/). A 10-second MediaRecorder recording was stopped, manually uploaded to the owner's private test Site, and retrieved via an authenticated same-origin HTTPS download. Raw media, extracted audio, and frames are not part of this source release.
+
+The 912,594-byte source SHA-256 is `a0ef4d5864b8d836d12aeb4639c77bebe278cf5d898f22a66d7c45852d02a1e1`, matching the UI upload receipt. The candidate CLI processed the original file with `--skip-asr` in 1.621 seconds, producing 10 sampled frames and retained Opus audio. The 306 encoded packet payloads and source timestamps were preserved. The media timeline ends at 9.99 seconds; the last decoded video frame timestamp is 9.883 seconds, leaving 0.107 seconds of unverified final-frame hold. Decoded mono audio contains 478,080 samples at 48 kHz (9.96 seconds of samples), RMS −17.203 dBFS, and is non-silent. The extracted audio decodes to exactly the same PCM SHA-256 as the recording: `1c27d92824f79572cf80b1bda7a87193cad27de7ec00be4ee1898f4b3bb6f227`.
+
+These are distinct time measures: timestamp span is not replaced with sample-count duration. Sampled-frame timestamps match the original decoded video timestamps. No ASR, speech understanding, continuous perception, long-video, multiple-tab, or YouTube success is claimed. The browser operator observed the private temporary-copy deletion confirmation; a blocked follow-up URL was not treated as proof of an HTTP 404.
+
+### Reproducible regression checks
+
+`tests/test_mediarecorder_webm.py` creates its own tiny VP9/Opus live WebM, replaces only optional track `DefaultDuration` with an equal-size EBML Void, and verifies the resulting missing-duration path. This changes no encoded media bytes or parent element lengths and leaves no checksum mismatch. Fifteen added tests cover successful original-file reader/queue use, zero ASR imports, integrity/timing changes, no audio basis, malformed timing, truncation, and the shared decode deadline.
+
+Run with the installed local dependencies:
+
+```sh
+python -m pytest -q tests capture_queue/tests
+```
+
+Candidate result: **141 passed, 12 skipped**. The 12 skips are existing media/ASR/batch integration artifacts not recreated in this clean staging directory; they are not reported as passing. The targeted new tests are **15 passed**. The real short recording above was independently verified separately, without publishing the clip.
