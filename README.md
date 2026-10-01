@@ -24,6 +24,21 @@ For a precise original-pixel chart crop: `.venv/bin/python refine_frame.py video
 
 Each output directory must be empty. There is no source-only cache and no overwrite deletion. URL inputs are rejected; acquiring permitted media is a separate action. ffmpeg/ffprobe subprocesses have fixed executable paths, timeouts, no shell, and `file,pipe` protocol restriction. The selected original audio stream is retained as `audio_original.mka`, while ASR gets a separate 16 kHz mono working file.
 
+### Preserve evidence without running local ASR
+
+Use the explicit, local-media-only `--skip-asr` option when transcription is handled separately:
+
+```sh
+.venv/bin/python reader.py recording.mp4 --skip-asr -o new-frames-and-audio
+.venv/bin/python reader.py recording.mp4 --skip-asr --captions external-transcript.srt -o new-evidence
+```
+
+This extracts frames, preserves the selected full original audio stream by remuxing without resampling, and imports any supplied or embedded text. It does not require, read, load, download, or run a Whisper model. The original media is unchanged and its hash remains in the manifest. With no text evidence, `transcript_status` is explicitly `no_transcript`.
+
+The manifest reports `status: complete_without_asr`, `asr_status: not_performed_user_skipped`, and zero ASR execution time. `asr.json` contains that skipped status and no speech segments. Supplied transcripts remain `supplied_sidecar` tracks in `captions.json`, with exact raw file bytes and hashes retained; they are not relabelled as local ASR or verified original subtitles. Keep external transcript provider, observation time, extraction method, unknown model information, and matching input-media hash in a separate provenance record. Manually using a transcription website is outside this CLI; no website/backend connection is added.
+
+Without `--skip-asr`, local Whisper still runs by default, including when captions exist. `--force-audio-asr` explicitly selects that default and cannot be combined with `--skip-asr`. This option is unsupported by `batch_reader.py`, the capture queue, and `--browser-evidence`; unsupported combinations are rejected. Skipped outputs use a distinct completion status, so they are not accepted as complete-transcription batch/resume or queue results. Existing browser bundles retain their separate `--skip-browser-asr` option.
+
 ## Multiple local videos or audio files
 
 ```sh
@@ -82,7 +97,7 @@ Upstream MIT license and notices are retained in `upstream/LICENSE` and `upstrea
 
 ## Offline browser evidence import
 
-Use `reader.py exported.json --browser-evidence -o new-output` for the separately validated browser-bundle importer. Read [BROWSER_IMPORT.md](BROWSER_IMPORT.md) for v0.2 requirements, capture gaps, session identity, ASR status and the explicit browser-import manifest variant. The current deployed private prototype still exports v0.1; matching v0.2 page changes are local only. Real browser recording and multiple-tab validation are still blocked/unverified. This input path is not yet supported by `batch_reader.py` or its resume cache.
+Use `reader.py exported.json --browser-evidence -o new-output` for the separately validated browser-bundle importer. Read [BROWSER_IMPORT.md](BROWSER_IMPORT.md) for v0.2 requirements, capture gaps, session identity, ASR status and the explicit browser-import manifest variant. The current deployed private prototype still exports v0.1; matching v0.2 page changes are local only. End-to-end browser recording/download transfer into the CLI and multiple-tab capture remain unverified. This input path is not yet supported by `batch_reader.py` or its resume cache.
 
 
 ## Experimental capture-to-ASR queue
